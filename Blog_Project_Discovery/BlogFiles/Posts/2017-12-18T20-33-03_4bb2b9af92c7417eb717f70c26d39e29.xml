@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Post>
+  <Id>4bb2b9af92c7417eb717f70c26d39e29</Id>
+  <Title>Setting up a quick SignalR Core web chat service.</Title>
+<Body>
+  # What is SignalR?
+
+  ASP.NET SignalR is a library for ASP.NET developers that simplifies the process of adding real-time web functionality to applications.
+
+  Real-time web functionality is the ability to have server code push content to connected clients instantly as it becomes available,
+  rather than having the server wait for a client to request new data.
+
+  [Link to offcial docs](https://docs.microsoft.com/en-us/aspnet/signalr/overview/getting-started/introduction-to-signalr)
+
+
+  Since I study the Microsoft Technlogy Stack, I was in for a treat when we had a course in SignalR. And what a treat it was!
+  SignalR blew my mind. It is one of the coolest technlogies I have ever come across.
+  SignalR has four main technlogy routes for setting up its connection to your clients. Four!
+
+  Websockets
+  :   `WebSocket (if the both the server and browser indicate they can support Websocket).
+  WebSocket is the only transport that establishes a true persistent,
+  two-way connection between client and server. However,
+  WebSocket also has the most stringent requirements; it is fully supported only in the latest versions of Microsoft Internet Explorer,
+  Google Chrome, and Mozilla Firefox, and only has a partial implementation in other browsers such as Opera and Safari.`
+  >
+  Server Sent Events
+  :   `Server Sent Events, also known as EventSource (if the browser supports Server Sent Events, which is basically all browsers except Internet Explorer.)`
+  >
+  Forever Frame
+  :   `Forever Frame (for Internet Explorer only). Forever Frame creates a hidden IFrame which makes a request to an endpoint on the server that does not complete. The server then continually sends script to the client which is immediately executed, providing a one-way realtime connection from server to client. The connection from client to server uses a separate connection from the server to client connection, and like a standard HTTP request, a new connection is created for each piece of data that needs to be sent.`
+  >
+  Ajax long polling
+  :   `Ajax long polling. Long polling does not create a persistent connection, but instead polls the server with a request that stays open until the server responds, at which point the connection closes, and a new connection is requested immediately. This may introduce some latency while the connection resets.`
+  >
+
+
+
+  Scope of the project we will be building here:
+  :   A simple web application where you can choose two rooms where you will be prompt for a user name and where you can chat with all the other people who have entered the chat room.
+  > The beauty of SignalR here is that whenever somebody enters a message in the chat, the message will be pushed to all of the connected clients in this room.
+
+  ## Time to spin up a ASP.NET Core SignalR Server!
+
+
+
+  We start by creating an ASP.NET Core Project and go to nuget to install the latest SignalR Core Package.
+
+:::img-center
+![testimage.jpg](/Uploads/install-signalr.png)
+:::
+
+This installs all the packages needed and adds a javascript file to wwwroot/js/
+which you need to reference in your html page.
+
+:::img-center
+![testimage.jpg](/Uploads/ref-js.png)
+:::
+
+  You also have to configure our pipeline in Startup.cs to use SignalR and map our up coming ChatHub.cs
+
+```
+public void ConfigureServices(IServiceCollection services)
+{
+  services.AddSignalR();
+  services.AddMvc();
+}
+
+
+public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+  if (env.IsDevelopment())
+  {
+    app.UseDeveloperExceptionPage();
+    app.UseBrowserLink();
+  }
+  else
+  {
+    app.UseExceptionHandler("/Home/Error");
+  }
+
+  app.UseStaticFiles();
+
+  app.UseSignalR(routes =>
+  {
+    routes.MapHub&lt;ChatHub&gt;("chatHub");
+  });
+
+  app.UseMvc(routes =>
+  {
+      routes.MapRoute(
+          name: "default",
+          template: "{controller=Home}/{action=Index}/{id?}");
+  });
+}
+```
+
+Now lets add a index page where you can choose your desired chat room.
+Here is some html with bootstrap to get you started:
+
+
+
+```
+&lt;div class="container"&gt;
+  &lt;div style="margin-top:50px;" class="jumbotron"&gt;
+    &lt;h1&gt;Welcome to a SignalR chat server!&lt;/h1&gt;
+    &lt;p&gt;Please choose your desired chat room below&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class="col-md-6"&gt;
+    &lt;a asp-action="ChooseChatRoom" asp-controller="Home" asp-route-chatroom="1" style="text-decoration:none;"&gt;
+      &lt;div class="panel panel-info"&gt;
+        &lt;div class="panel-heading"&gt;
+          &lt;h3 class="panel-title"&gt;Chat room 1&lt;/h3&gt;
+        &lt;/div&gt;
+        &lt;div class="panel-body"&gt;
+          &lt;span id="chatroom1Members"&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/a&gt;
+    &lt;/div&gt;
+    &lt;div class="col-md-6"&gt;
+      &lt;a asp-action="ChooseChatRoom" asp-controller="Home" asp-route-chatroom="2" style="text-decoration:none;"&gt;
+      &lt;div class="panel panel-success"&gt;
+        &lt;div class="panel-heading"&gt;
+          &lt;h3 class="panel-title"&gt;Chat room 2&lt;/h3&gt;
+        &lt;/div&gt;
+        &lt;div class="panel-body"&gt;
+          &lt;span id="chatroom2Members"&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+  ```
+
+This should produce something like this:
+
+:::img-center
+![testimage.jpg](/Uploads/index-signalr.png)
+:::
+
+
+Now lets add some javascript in our index page which we use to show all members presently attending each chat room in realtime.
+
+```
+let connection = new signalR.HubConnection('/chatHub');
+
+connection.start()
+.then(() => connection.invoke("GetChatRoom1Members"))
+.then(() => connection.invoke("GetChatRoom2Members"));
+
+connection.on('GetChatRoom1Members', data => {
+const spanMembers1 = document.getElementById("chatroom1Members");
+let members = "";
+for (var i = 0; i &lt; data.length; i++) {
+          members += data[i].name + ",";
+      }
+      spanMembers1.innerHTML = members;
+  });
+
+  connection.on('GetChatRoom2Members', data => {   
+      const spanMembers2 = document.getElementById("chatroom2Members");
+      let members = "";
+      for (var i = 0; i &lt; data.length; i++) {
+  members += data[i].name + ",";
+  }
+  spanMembers2.innerHTML = members;
+  });
+  ```
+
+
+  This is ofcourse accompanied with some server side code.
+  Lets create our ChatHub.cs and a ConnectionHelper.cs class. Note that we have to derive from the SignalR hub class for the ChatHub.cs
+
+  ```
+  public class ChatHub : Hub
+  {
+    public Task Send(string message, string group)
+    {
+      var fromId = Context.ConnectionId;
+      var client = ConnectionHelper.Connections.FirstOrDefault(c => c.ConnectionId.Equals(fromId));
+      return Clients.Group(group).InvokeAsync("send", $"{DateTime.Now.ToShortTimeString()} {client.Name}: {message}");
+    }
+
+    public Task GetChatRoom1Members()
+    {
+      return Clients.All.InvokeAsync("GetChatRoom1Members", ConnectionHelper.Connections.Where(c => c.ChatRoom == ChatRoom.chatroom1));
+    }
+
+    public Task GetChatRoom2Members()
+    {
+      return Clients.All.InvokeAsync("GetChatRoom2Members", ConnectionHelper.Connections.Where(c => c.ChatRoom == ChatRoom.chatroom2));
+    }
+
+    public void RegisterMember(string name, string chatRoom)
+    {
+      var client = new MyClient();
+      client.ConnectionId = Context.ConnectionId;
+      client.Name = name;
+
+      if (chatRoom == "chatRoom1")
+      {
+        client.ChatRoom = ChatRoom.chatroom1;
+        Groups.AddAsync(Context.ConnectionId, "chatRoom1");
+      }
+      else if (chatRoom == "chatRoom2")
+      {
+        client.ChatRoom = ChatRoom.chatroom2;
+        Groups.AddAsync(Context.ConnectionId, "chatRoom2");
+      }
+
+      ConnectionHelper.Connections.Add(client);
+    }
+
+    public override Task OnDisconnectedAsync(Exception exception)
+    {
+      var client = ConnectionHelper.Connections.FirstOrDefault(c => c.ConnectionId == Context.ConnectionId);
+
+      if(client != null)
+      {
+        ConnectionHelper.Connections.Remove(client);
+      }
+
+      return base.OnDisconnectedAsync(exception);
+    }
+
+
+  }
+  ```
+
+  ```
+  public static class ConnectionHelper
+  {
+    public static List&lt;MyClient&gt; Connections = new List&lt;MyClient&gt;();
+
+  public class MyClient
+  {
+    public string Name { get; set; }
+    public ChatRoom ChatRoom { get; set; }
+    public string ConnectionId { get; set; }
+  }
+
+  public enum ChatRoom
+  {
+    chatroom1,
+    chatroom2
+  }
+
+  }
+  ```
+
+  Note that I have chosen to implement my own chatroom enums where I can keep check on who is in which chat room.
+  This is not really nessecery since SignalR have a built in functionality called groups. Where you can add and remove clients from.
+  But for the sake of time I'm keeping my implementation. I might update this in the future.
+
+
+  So lets add on of the chat room pages. I created two chat room pages but it would be nicer to have just one dynamic chat room page.
+  This is only to give you an idea of what is possible.
+
+  ```
+  &lt;div class="container"&gt;
+    &lt;div style="margin-top:50px;" class="jumbotron"&gt;
+      &lt;h1>Welcome to chat room 1&lt;/h1&gt;
+      &lt;p>Current users in chat room:&lt;/p&gt;
+      &lt;p id="chatroom1Members">&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div class="row"&gt;
+      &lt;div id="board" class="col-md-8"&gt;
+      &lt;/div&gt;
+      &lt;div class="col-md-4"&gt;
+        &lt;div class="input-group"&gt;
+          &lt;input id="txtMessage" type="text" class="form-control"&gt;
+            &lt;span class="input-group-btn"&gt;
+              &lt;button class="btn btn-default" onclick="SendMessage()" type="button">Send&lt;/button&gt;
+            &lt;/span&gt;
+          &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;style&lt;
+    .well{
+    min-height:10px;
+    margin:0;
+    padding:2px;
+    }
+
+    #board{
+    height:300px;
+    overflow:auto;
+    }
+  &lt;/style&lt;
+  ```
+
+  This should result in something like this:
+
+:::img-center
+![testimage.jpg](/Uploads/chatroom-signalr.png)
+:::
+
+
+  Now for the last piece of javascript embedded in the chatroom page.
+
+  ```
+  var name = prompt("Who are you?", "Your name..");
+
+  let connection = new signalR.HubConnection('/chatHub');
+  let chatroom = "chatRoom1";
+  connection.start()
+  .then(() => connection.invoke("RegisterMember", name, chatroom))
+  .then(() => connection.invoke("GetChatRoom1Members"));
+
+  connection.on('GetChatRoom1Members', data => {
+  const spanMembers1 = document.getElementById("chatroom1Members");
+  let members = "";
+  for (var i = 0; i &lt; data.length; i++) {
+            members += data[i].name + " ";
+        }
+        spanMembers1.innerHTML = members;
+    });
+
+    connection.on('Send', data =&lt; {
+        const board = document.getElementById('board');
+        board.innerHTML += `&lt;div class="well"&lt;${data}&lt;/div&lt;`;
+  $("#board").animate({ scrollTop: 1000 }, 100);
+  });
+
+  function SendMessage() {
+    const group = "chatRoom1";
+    const input = document.getElementById("txtMessage");
+    if (input.value != "") {
+    connection.invoke('Send', input.value, group);
+    input.value = "";
+    }
+  }
+
+  (function () {
+    document.querySelector("body").addEventListener("keyup", event =&lt; {
+  if (event.key !== "Enter") return;
+  SendMessage();
+  });
+  })();
+  ```
+
+
+  This concludes my first simple implementation of SignalR Core.
+
+  You can find my github repo [Here](https://github.com/Josephson199/SignalRChat)
+
+
+</Body>
+  <PubDate>2017-12-18T21:33:03.9714170+01:00</PubDate>
+  <LastModified>2017-12-18T22:45:36.9650809+01:00</LastModified>
+  <IsPublic>True</IsPublic>
+  <IsDeleted>False</IsDeleted>
+  <Description>Introduction to SignalR Core and setting up a simple web chat server</Description>
+  <Url>signalr-chatserver</Url>
+  <Comments />
+</Post>

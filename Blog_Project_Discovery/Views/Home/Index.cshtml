@@ -1,0 +1,62 @@
+﻿@model List<Blog_Project_Discovery.Models.Home.PostSummary>
+    <section class="content">
+        <article>
+            <header class="gradient-1">
+                <div class="overlay" style="background-image: url(/images/header-1.jpg);" data-parallax="9"></div>
+                <div class="excerpt">
+                    <p></p>
+                </div>
+            </header>
+
+            <div class="body">
+
+                @{
+
+                    foreach (var post in Model)
+                    {
+                        <div class="summary">
+
+                            <h2>
+                                <a asp-action="ViewPost" asp-controller="Home" asp-route-url="@post.Url">@post.Title</a>
+                            </h2>
+
+
+                            <div class="title">
+                                <b>@post.PubDate.ToString("MMM dd, yyyy")</b>
+                            </div>
+
+
+                            <p>
+                                @Html.Raw(post.Parse())
+                                <a asp-action="ViewPost" asp-controller="Home" asp-route-url="@post.Url">
+                                    <i class="fa fa-book" aria-hidden="true"></i>...
+                                </a>
+
+                            </p>
+
+
+                        </div>
+
+                    }
+                }
+
+            </div>
+
+        </article>
+    </section>
+    <style>
+
+        a:hover {
+            cursor: pointer;
+        }
+
+        .title {
+            font-family: "Karla", sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            position: relative;
+            margin-bottom: 15px;
+        }
+    </style>

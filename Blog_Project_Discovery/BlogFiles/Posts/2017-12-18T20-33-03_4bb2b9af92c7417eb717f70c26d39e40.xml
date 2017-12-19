@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Post>
+  <Id>4bb2b9af92c7417eb717f70c26d39e40</Id>
+  <Title>xCBL3.0 document standard parsing with .NET CORE</Title>
+<Body>
+
+
+
+
+:::img-center
+![testimage.jpg](/Uploads/install-signalr.png)
+:::
+
+
+
+</Body>
+  <PubDate>2017-12-18T21:33:03.9714170+01:00</PubDate>
+  <LastModified>2017-12-18T22:45:36.9650809+01:00</LastModified>
+  <IsPublic>True</IsPublic>
+  <IsDeleted>False</IsDeleted>
+  <Description>Introduction to SignalR Core and setting up a simple web chat server</Description>
+  <Url>xcbl30-document-parsing-dotnet</Url>
+  <Comments />
+</Post>

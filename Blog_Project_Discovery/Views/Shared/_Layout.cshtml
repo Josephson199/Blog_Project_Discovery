@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Mattias Josephsson</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+    <link rel="stylesheet" href="/assets/normalize.css" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+
+
+</head>
+<body>
+    <header>
+        <a style="text-decoration:none;" href="https://www.linkedin.com/in/mattias-josephsson-5014b0130/" class="toggle">LinkedIn</a>
+        <a style="text-decoration:none;" asp-controller="Home" asp-action="About" class="toggle">About</a>
+        <a style="text-decoration:none;" href="/" class="toggle">Home</a>
+        <a style="text-decoration:none;" href="/" title="Back to Homepage" class="logo">Mattias Josephsson's Blog</a>
+    </header>
+    @*<section class="content">
+        <article>
+            <header class="gradient-1">
+                <div class="overlay" style="background-image: url(/images/header-1.jpg);" data-parallax="9"></div>
+                <div class="excerpt">
+                    <p></p>
+                </div>
+            </header>*@
+
+            @RenderBody()
+
+        @*</article>
+    </section>*@
+
+    <footer>
+        <div class="copyright">
+            <b>
+                (c) Mattias Josephsson |   
+                <a style="text-decoration: none;" href="https://www.linkedin.com/in/mattias-josephsson-5014b0130/">
+                    <i style="font-size:24px;" class="fa fa-linkedin-square" aria-hidden="true"></i>
+                </a> |
+                <a style="text-decoration: none;" href="https://www.facebook.com/mattias.josephson.58">
+                    <i style="font-size:24px;" class="fa fa-facebook-square" aria-hidden="true"></i>
+                </a> |
+                <a style="text-decoration: none;" href="https://github.com/Josephson199">
+                    <i style="font-size:24px;" class="fa fa-github-square" aria-hidden="true"></i>
+                </a>
+                | josephson199@gmail.com
+            </b>
+
+        </div>
+    </footer>
+
+
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+</body>
+</html>
+
+

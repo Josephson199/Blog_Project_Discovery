@@ -1,0 +1,41 @@
+﻿@model Blog_Project_Discovery.Models.Home.PostModel
+    <section class="content">
+        <article>
+            <header class="gradient-1">
+                <div class="excerpt">
+                    <h1>
+                        <a asp-action="ViewPost" asp-controller="Home">@Model.Title</a>
+                    </h1>
+                    <p>
+                        @Html.Raw(Model.ParseDescription())
+                    </p>
+                    <span class="meta">Published <b>@Model.PubDate.ToString("MMM dd, yyyy")</b></span>
+                    </div>
+            </header>
+            <div class="body">           
+                <p>
+                    @Html.Raw(Model.ParseBody())
+                </p>
+            </div>
+        </article>
+    </section>
+
+
+
+
+
+    <style>
+        a:hover {
+            cursor: pointer;
+        }
+
+        .title {
+            font-family: "Karla", sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            position: relative;
+            margin-bottom: 15px;
+        }
+    </style>
