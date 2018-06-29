@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Post>
+  <Id>4bb2b9af92c7417eb717f70c26d39e40</Id>
+  <Title>xCBL Document Definitions and how to parse it into C# classes</Title>
+<Body>
+  # What is xCBL?
+
+  XML Common Buisness Library, aka xCBL is simply a XML document structure standard often used in buisness to buisness e-commerce. 
+
+  We recently had a customer who gave us a few options in how we should recieve thier order data from thier procurement system which we had integrated with.
+  And one of those options included using of the xCBL 3.0 Document Definition. 
+
+  So I set about to google my way through understanding what it was all about.
+
+  I found my way to [xCBL offcial docs](http://www.xcbl.org/) and getting hold of the [schema](http://www.xcbl.org/xcbl30/xcbl30xsdschemas.shtml) for the xCBL 3.0 standard.
+  There were a lot files! But I managed to find the Order.xsd file in the bundle which was what I was looking for. It matched perfectly with the documentation our customer had sent us.
+
+  Now we wanted to build an ASP.NET Core 1.0 web api and build an endpoint for our customer to post thier order document to us so we could process it.
+  We also hosted it as a Lambda on AWS behind our AWS API Gateway. But that's another story.
+
+  So, we recieve a post request from our customer and in the request body we find this xml we want to parse to shiny object, we all love objects right?!
+
+  But what does this object look like? Surely there must be a tool create this class from the Order.xsd. 
+  In comes Developer Command Prompt for VS 2017(or 2015), just search for it in the windows start menu.
+  Now navigate to the location of your Order.xsd file and run  
+  xsd Order.xsd /c /n:SomeNameSpace
+  
+  
+:::img-center
+![xsd-create-classes](/Uploads/cli-xsd-post.png)
+:::
+
+
+  This should generate a class named Order with the namespace SomeNameSpace and create it at the location you are at in CLI. And if you open the class and see that it's 60k lines: Woah. What a nice tool.
+
+  From this point you can include the class into your project and use it to deserialize the XML.
+
+  This is how we solved reading the request and deserializing it to an instance of the Order class. I removed the Exception handling and authentication for readability.
+
+```
+  [HttpPost]
+  public IActionResult Endpoint()
+  {
+      string request = string.Empty;
+
+      using (var sr = new StreamReader(Request.Body))
+      {
+          request = sr.ReadToEnd();
+      }
+
+      XDocument doc = XDocument.Parse(request);
+
+      var serializer = new XmlSerializer(typeof(Order));
+
+      Order order = (Order) serializer.Deserialize(doc);
+
+      //continue processing of our Order class..
+
+      return Ok();      
+  }
+```
+
+
+
+
+
+</Body>
+  <PubDate>2017-12-20T20:33:03.9714170+01:00</PubDate>
+  <LastModified>2017-12-18T22:45:36.9650809+01:00</LastModified>
+  <IsPublic>True</IsPublic>
+  <IsDeleted>False</IsDeleted>
+  <Description>Creating and parsing an schema.xsd file to c# class using the Developer Command Prompt for VS2017.</Description>
+  <Url>xcbl-and-xsd-creating-a-parser</Url>
+  <Comments />
+</Post>
